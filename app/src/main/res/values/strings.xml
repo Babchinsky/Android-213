@@ -29,4 +29,11 @@
     <string name="calc_btn_equal">=</string>
     <string name="calc_btn_dot">.</string>
     <string name="calc_btn_pm">±</string>
+
+    <string name="calc_btn_memory_clear">MC</string>  <!-- Очистить память -->
+    <string name="calc_btn_memory_recall">MR</string>  <!-- Вызвать значение из памяти -->
+    <string name="calc_btn_memory_plus">M+</string>  <!-- Добавить к значению в памяти -->
+    <string name="calc_btn_memory_minus">M−</string>  <!-- Вычесть из значения в памяти -->
+    <string name="calc_btn_memory_store">MS</string>  <!-- Сохранить в память -->
+    <string name="calc_btn_memory_dropdown">M∨</string>  <!-- Выпадающий список памяти -->
 </resources>

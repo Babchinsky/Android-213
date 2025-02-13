@@ -47,15 +47,48 @@
         tools:text="777" />
 
     <!--отступ-->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="30dp"/>
+    <!--    <View-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="30dp"/>-->
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_margin="5dp">
+
+        <LinearLayout
+            style="@style/calc_row_memory_btn">
+            <Button
+                android:id="@+id/calc_btn_memory_clear"
+                style="@style/calc_btn_memory"
+                android:text="@string/calc_btn_memory_clear" />
+
+            <Button
+                android:id="@+id/calc_btn_memory_recall"
+                style="@style/calc_btn_memory"
+                android:text="@string/calc_btn_memory_recall" />
+
+            <Button
+                android:id="@+id/calc_btn_memory_plus"
+                style="@style/calc_btn_memory"
+                android:text="@string/calc_btn_memory_plus" />
+
+            <Button
+                android:id="@+id/calc_btn_memory_minus"
+                style="@style/calc_btn_memory"
+                android:text="@string/calc_btn_memory_minus" />
+
+            <Button
+                android:id="@+id/calc_btn_memory_store"
+                style="@style/calc_btn_memory"
+                android:text="@string/calc_btn_memory_store" />
+
+            <Button
+                android:id="@+id/calc_btn_memory_dropdown"
+                style="@style/calc_btn_memory"
+                android:text="@string/calc_btn_memory_dropdown" />
+        </LinearLayout>
 
         <LinearLayout
             style="@style/calc_row_btn">
