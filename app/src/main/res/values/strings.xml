@@ -20,6 +20,7 @@
     <string name="calc_btn_c">C</string>
     <string name="calc_btn_backspace">\u232b</string>
     <string name="calc_btn_inv">⅟x</string>
+    <string name="calc_inv_tpl">1 / (%s) =</string>
     <string name="calc_btn_sqr">x²</string>
     <string name="calc_btn_sqrt">√x</string>
     <string name="calc_btn_div">÷</string>
@@ -27,8 +28,10 @@
     <string name="calc_btn_sub">−</string>
     <string name="calc_btn_add">+</string>
     <string name="calc_btn_equal">=</string>
-    <string name="calc_btn_dot">.</string>
+    <string name="calc_btn_dot">,</string>
     <string name="calc_btn_pm">±</string>
+    <string name="calc_err_div_zero">Дiлення на 0</string>
+
 
     <string name="calc_btn_memory_clear">MC</string>  <!-- Очистить память -->
     <string name="calc_btn_memory_recall">MR</string>  <!-- Вызвать значение из памяти -->
