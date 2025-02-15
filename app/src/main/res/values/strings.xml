@@ -30,7 +30,8 @@
     <string name="calc_btn_equal">=</string>
     <string name="calc_btn_dot">,</string>
     <string name="calc_btn_pm">±</string>
-    <string name="calc_err_div_zero">Дiлення на 0</string>
+    <string name="calc_err_div_zero">Деление на 0</string>
+    <string name="calc_err">Ошибка</string>
 
 
     <string name="calc_btn_memory_clear">MC</string>  <!-- Очистить память -->
