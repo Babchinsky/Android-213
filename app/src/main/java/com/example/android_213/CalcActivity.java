@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,11 +22,14 @@ public class CalcActivity extends AppCompatActivity {
     private boolean isAction = false;
     private int operatorBtnId;
     private double firstNum;
+    // Переменная памяти для операций с памятью
+    private double memoryValue = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calc);
+
         findViewById(R.id.calc_btn_0).setOnClickListener(this::onDigitClick);
         findViewById(R.id.calc_btn_1).setOnClickListener(this::onDigitClick);
         findViewById(R.id.calc_btn_2).setOnClickListener(this::onDigitClick);
@@ -50,6 +54,16 @@ public class CalcActivity extends AppCompatActivity {
         findViewById(R.id.calc_btn_div).setOnClickListener(this::onOperationClick);
 
 
+        findViewById(R.id.calc_btn_percent).setOnClickListener(this::onPercentClick);
+        findViewById(R.id.calc_btn_sqr).setOnClickListener(this::onSqrClick);
+        findViewById(R.id.calc_btn_sqrt).setOnClickListener(this::onSqrtClick);
+        findViewById(R.id.calc_btn_memory_clear).setOnClickListener(this::onMemoryClearClick);
+        findViewById(R.id.calc_btn_memory_recall).setOnClickListener(this::onMemoryRecallClick);
+        findViewById(R.id.calc_btn_memory_plus).setOnClickListener(this::onMemoryPlusClick);
+        findViewById(R.id.calc_btn_memory_minus).setOnClickListener(this::onMemoryMinusClick);
+        findViewById(R.id.calc_btn_memory_store).setOnClickListener(this::onMemoryStoreClick);
+        findViewById(R.id.calc_btn_memory_dropdown).setOnClickListener(this::onMemoryDropdownClick);
+
         tvResult = findViewById(R.id.calc_tv_result);
         tvExpression = findViewById(R.id.calc_tv_expression);
         zeroDigit = getString(R.string.calc_btn_0);
@@ -68,7 +82,6 @@ public class CalcActivity extends AppCompatActivity {
         outState.putCharSequence("tvExpression", tvExpression.getText());
         outState.putBoolean("needClear", needClear);
         outState.putBoolean("isErrorDisplayed", isErrorDisplayed);
-
     }
 
     @Override
@@ -88,7 +101,7 @@ public class CalcActivity extends AppCompatActivity {
         isErrorDisplayed = false;
     }
 
-    private void onClearEntryClick(View view){
+    private void onClearEntryClick(View view) {
         tvResult.setText(zeroDigit);
         isErrorDisplayed = false;
     }
@@ -104,7 +117,7 @@ public class CalcActivity extends AppCompatActivity {
         } else {
             resText = toResult(1.0 / x);
         }
-        tvResult.setText((resText));
+        tvResult.setText(resText);
         needClear = true;
     }
 
@@ -114,7 +127,7 @@ public class CalcActivity extends AppCompatActivity {
             return;
         }
         resText += dotSymbol;
-        tvResult.setText((resText));
+        tvResult.setText(resText);
     }
 
     private void onBackspaceClick(View view) {
@@ -129,7 +142,7 @@ public class CalcActivity extends AppCompatActivity {
                 resText = zeroDigit;
             }
         }
-        tvResult.setText((resText));
+        tvResult.setText(resText);
     }
 
     private void onPmClick(View view) {
@@ -139,7 +152,7 @@ public class CalcActivity extends AppCompatActivity {
         } else if (!resText.equals(zeroDigit)) {
             resText = minusSymbol + resText;
         }
-        tvResult.setText((resText));
+        tvResult.setText(resText);
     }
 
     private void onDigitClick(View view) {
@@ -174,7 +187,7 @@ public class CalcActivity extends AppCompatActivity {
         tvResult.setText(resText);
 
         operatorBtnId = view.getId();
-        firstNum = Double.parseDouble(resText);
+        firstNum = Double.parseDouble(resText.replace(dotSymbol, ".").replace(minusSymbol, "-"));
     }
 
     @SuppressLint("SetTextI18n")
@@ -183,7 +196,7 @@ public class CalcActivity extends AppCompatActivity {
         if (tvResult.getText().toString().isEmpty()) {
             return;
         }
-        double secondNum = Double.parseDouble(tvResult.getText().toString());
+        double secondNum = Double.parseDouble(tvResult.getText().toString().replace(dotSymbol, ".").replace(minusSymbol, "-"));
         double result = 0;
 
         try {
@@ -203,13 +216,95 @@ public class CalcActivity extends AppCompatActivity {
             }
 
             tvExpression.setText(tvExpression.getText().toString() + tvResult.getText().toString());
-
             tvResult.setText(toResult(result));
             needClear = true;
         } catch (Exception e) {
             tvResult.setText(getString(R.string.calc_err));
             isErrorDisplayed = true;
         }
+    }
+
+    // Новая кнопка: процент
+    @SuppressLint("SetTextI18n")
+    private void onPercentClick(View view) {
+        if (isErrorDisplayed) return;
+        double current = parseResult(tvResult.getText().toString());
+        double percentValue;
+        if (isAction) {
+            // При наличии оператора значение интерпретируется как процент от первого числа
+            percentValue = firstNum * current / 100.0;
+            tvExpression.setText(tvExpression.getText().toString() + tvResult.getText().toString() + "%");
+        } else {
+            percentValue = current / 100.0;
+            tvExpression.setText(tvResult.getText().toString() + "%");
+        }
+        tvResult.setText(toResult(percentValue));
+        needClear = true;
+    }
+
+    // Новая кнопка: квадрат числа
+    private void onSqrClick(View view) {
+        if (isErrorDisplayed) return;
+        double current = parseResult(tvResult.getText().toString());
+        tvExpression.setText(String.format("%s² =", toResult(current)));
+        double result = current * current;
+        tvResult.setText(toResult(result));
+        needClear = true;
+    }
+
+    // Новая кнопка: квадратный корень
+    private void onSqrtClick(View view) {
+        if (isErrorDisplayed) return;
+        double current = parseResult(tvResult.getText().toString());
+        if (current < 0) {
+            tvResult.setText(getString(R.string.calc_err));
+            isErrorDisplayed = true;
+            return;
+        }
+        tvExpression.setText(String.format("√(%s) =", toResult(current)));
+        double result = Math.sqrt(current);
+        tvResult.setText(toResult(result));
+        needClear = true;
+    }
+
+    // Кнопка MC: очистить память
+    private void onMemoryClearClick(View view) {
+        memoryValue = 0;
+    }
+
+    // Кнопка MR: извлечь значение из памяти
+    private void onMemoryRecallClick(View view) {
+        if (isErrorDisplayed) return;
+        tvResult.setText(toResult(memoryValue));
+        needClear = true;
+    }
+
+    // Кнопка M+: добавить текущее число к памяти
+    private void onMemoryPlusClick(View view) {
+        if (isErrorDisplayed) return;
+        double current = parseResult(tvResult.getText().toString());
+        memoryValue += current;
+        needClear = true;
+    }
+
+    // Кнопка M–: вычесть текущее число из памяти
+    private void onMemoryMinusClick(View view) {
+        if (isErrorDisplayed) return;
+        double current = parseResult(tvResult.getText().toString());
+        memoryValue -= current;
+        needClear = true;
+    }
+
+    // Кнопка MS: сохранить текущее число в память
+    private void onMemoryStoreClick(View view) {
+        if (isErrorDisplayed) return;
+        memoryValue = parseResult(tvResult.getText().toString());
+        needClear = true;
+    }
+
+    // Кнопка M∨: показать текущее значение памяти (например, через Toast)
+    private void onMemoryDropdownClick(View view) {
+        Toast.makeText(this, "Memory: " + toResult(memoryValue), Toast.LENGTH_SHORT).show();
     }
 
     private int digitLength(String resText) {
@@ -225,19 +320,16 @@ public class CalcActivity extends AppCompatActivity {
 
     private String toResult(double x) {
         String res;
-
         // Если число целое, убираем .0
         if (x == (int) x) {
             res = String.valueOf((int) x);
         } else {
             res = String.valueOf(x);
         }
-
         // Заменяем символы на локализованные (точка, минус, нули)
         res = res.replace(".", dotSymbol)
                 .replace("-", minusSymbol)
                 .replaceAll("0", zeroDigit);
-
         // Ограничиваем количество символов
         if (digitLength(res) > maxDigits) {
             res = res.substring(0, maxDigits);
