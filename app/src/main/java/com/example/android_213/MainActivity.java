@@ -12,9 +12,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findViewById(R.id.main_btn_calc).setOnClickListener(this::onButtonCalc);
+        findViewById(R.id.main_btn_game).setOnClickListener(this::onButtonGame);
     }
 
     private void onButtonCalc(View view) {
         startActivity(new Intent(MainActivity.this, CalcActivity.class));
+    }
+
+    private void onButtonGame(View view) {
+        startActivity(new Intent(MainActivity.this, GameActivity.class));
     }
 }

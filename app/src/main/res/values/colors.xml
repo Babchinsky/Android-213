@@ -5,7 +5,7 @@
 
     <!--    region MAIN -->
     <color name="main_layout_bg">#CAE4E2</color>
-    <color name="main_btn_bg">#575408</color>
+    <color name="main_btn_bg">#0A4683</color>
     <!--    endregion -->
 
     <!-- region CALC -->
@@ -17,4 +17,9 @@
     <color name="calc_tv_exp_fg">#A5A5A5</color>
     <!-- endregion -->
 
+    <!--    region GAME-->
+    <color name="game_tv_title">#EACA5E</color>
+    <color name="game_tv_score">#3D3A33</color>
+    <color name="game_btn_new">#F55D3E</color>
+    <!--    endregion-->
 </resources>
