@@ -1,8 +1,6 @@
 package com.example.android_213;
 
 import android.os.Bundle;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -24,8 +22,8 @@ public class GameActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        findViewById(R.id.game_layout_main).setOnTouchListener(
-                new OnSwipeListener(GameActivity.this){
+        findViewById(R.id.game_layout_field).setOnTouchListener(
+                new OnSwipeListener(GameActivity.this) {
                     @Override
                     public void onSwipeBottom() {
                         Toast.makeText(GameActivity.this, "OnSwipeBottom", Toast.LENGTH_SHORT).show();
@@ -44,11 +42,6 @@ public class GameActivity extends AppCompatActivity {
                     @Override
                     public void onSwipeTop() {
                         Toast.makeText(GameActivity.this, "OnSwipeTop", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public boolean onTouch(View view, MotionEvent motionEvent) {
-                        return super.onTouch(view, motionEvent);
                     }
                 });
     }

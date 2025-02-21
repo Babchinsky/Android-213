@@ -21,5 +21,20 @@
     <color name="game_tv_title">#EACA5E</color>
     <color name="game_tv_score">#3D3A33</color>
     <color name="game_btn_new">#F55D3E</color>
+    <color name="game_field_bg">#A2917F</color>
+    <color name="game_tile0_bg">#BEAE9F</color>
+    <color name="game_tile0_fg">#BEAE9F</color>
+    <color name="game_tile2_bg">#ECE2D8</color>
+    <color name="game_tile2_fg">#766D64</color>
+    <color name="game_tile4_bg">#ECDFCC</color>
+    <color name="game_tile4_fg">#766D64</color>
+    <color name="game_tile8_bg">#F2B17D</color>
+    <color name="game_tile8_fg">#F7F4EE</color>
+    <color name="game_tile16_bg">#F4966A</color>
+    <color name="game_tile16_fg">#F5F6EA</color>
+    <color name="game_tile32_bg">#F57D68</color>
+    <color name="game_tile32_fg">#F5F5ED</color>
+    <color name="game_tile64_bg">#F15E46</color>
+    <color name="game_tile64_fg">#F6F5EE</color>
     <!--    endregion-->
 </resources>
