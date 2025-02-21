@@ -6,3 +6,7 @@
 
 # Homework 3
 ![Homework 1](GIFs/Homework3.gif)
+
+# Homework 4
+![image](https://github.com/user-attachments/assets/b8a5197c-cbd2-4f02-9296-c392397c8b87)
+
