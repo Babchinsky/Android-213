@@ -50,5 +50,7 @@
     <string name="game_tv_hint">Join the numbers and get to the 2048 tile!</string>
     <string name="game_btn_new">NEW</string>
     <string name="game_btn_undo">UNDO</string>
+    <string name="game_tv_score_tpl">SCORE\n%s</string>
+    <string name="game_tv_best_tpl">BEST\n%s</string>
 <!--    endregion-->
 </resources>
