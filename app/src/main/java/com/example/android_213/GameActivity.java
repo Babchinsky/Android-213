@@ -1,8 +1,10 @@
 package com.example.android_213;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -16,6 +18,11 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -23,6 +30,7 @@ import java.util.Random;
 
 public class GameActivity extends AppCompatActivity {
     private final Random random = new Random();
+    private final String bestScoreFilename = "score.best";
     private TextView tvScore;
     private TextView tvBestScore;
     private Animation spawnAnimation;
@@ -33,6 +41,7 @@ public class GameActivity extends AppCompatActivity {
     private final int N = 4;
     private final int[][] tiles = new int[N][N];
     private final TextView[][] tvTiles = new TextView[N][N];
+    private SavedState savedState;
 
     @SuppressLint({"ClickableViewAccessibility", "DiscouragedApi"})
     @Override
@@ -91,7 +100,9 @@ public class GameActivity extends AppCompatActivity {
 
             @Override
             public void onSwipeLeft() {
-                if (moveLeft()) {
+                if (canMoveLeft()) {
+                    saveField();
+                    moveLeft();
                     spawnTile();
                     updateField();
                 } else {
@@ -115,8 +126,46 @@ public class GameActivity extends AppCompatActivity {
             }
         });
 
-        bestScore = 0L; // TODO: восстановить с сохранённого
+        bestScore = 0L;
+        loadBestScore();
         startNewGame();
+    }
+
+    private void saveField() {
+
+    }
+
+    private void saveBestScore() {
+        /*
+        Сохранение данных. Работа с файлами.
+        В Android работа с хранилищами разделяется на две группы.
+        - локальная группа
+        - общаю группа
+        Локальная - это директория, выделенная специально под приложение, в ней
+        добавляется файловая система и БД. Данная директория удаляется при
+        удалении приложения. Доступ к директории не ограниченный.
+        Общая группа - внешние файлы, обычно - галерея. Доступ к ней
+        ограниченный (запрещённый) и включается только с разрешением пользователя.
+        */
+        try (FileOutputStream fos = openFileOutput(bestScoreFilename, Context.MODE_PRIVATE)) {
+            DataOutputStream writer = new DataOutputStream(fos);
+            writer.writeLong(bestScore);
+            writer.flush();
+            writer.close();
+        } catch (IOException ex) {
+            Log.w("GameActivity::saveBestScore", ex.getMessage() + " ");
+        }
+
+    }
+
+    private void loadBestScore() {
+        try (FileInputStream fis = openFileInput(bestScoreFilename);
+             DataInputStream reader = new DataInputStream(fis)
+        ) {
+            bestScore = reader.readLong();
+        } catch (IOException ex) {
+            Log.w("GameActivity::loadBestScore", ex.getMessage() + " ");
+        }
     }
 
     private void startNewGame() {
@@ -157,7 +206,19 @@ public class GameActivity extends AppCompatActivity {
         return res;
     }
 
-    private boolean moveLeft() {
+    private boolean canMoveLeft() {
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N - 1; j++) {
+                if (tiles[i][j] != 0 && tiles[i][j + 1] == tiles[i][j] ||
+                        tiles[i][j] == 0 && tiles[i][j + 1] != 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void moveLeft() {
         boolean res;
         // [2000]         [0002]        [0002]          [0002]
         // [2020]         [0022]        [0004]          [0004]
@@ -178,7 +239,6 @@ public class GameActivity extends AppCompatActivity {
         if (res) {
             shiftLeft(true);
         }
-        return res;
     }
 
     private boolean shiftRight(boolean shiftTags) {
@@ -255,6 +315,10 @@ public class GameActivity extends AppCompatActivity {
 
     @SuppressLint("DiscouragedApi")
     private void updateField() {
+        if (score > bestScore) {
+            bestScore = score;
+            saveBestScore();
+        }
         tvScore.setText(getString(R.string.game_tv_score_tpl, scoreToString(score)));
         tvBestScore.setText(getString(R.string.game_tv_best_tpl, scoreToString(bestScore)));
         for (int i = 0; i < N; i++) {
@@ -298,5 +362,11 @@ public class GameActivity extends AppCompatActivity {
 
     private String scoreToString(long value) {
         return String.valueOf(value);
+    }
+
+    private class SavedState{
+        private final int[][] tiles = null;
+        private long score;
+        private long bestScore;
     }
 }
