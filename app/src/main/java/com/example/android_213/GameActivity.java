@@ -1,11 +1,13 @@
 package com.example.android_213;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
@@ -71,6 +73,8 @@ public class GameActivity extends AppCompatActivity {
         }
         tvScore = findViewById(R.id.game_tv_score);
         tvBestScore = findViewById(R.id.game_tv_best);
+        findViewById(R.id.game_btn_undo).setOnClickListener(this::undoClick);
+        findViewById(R.id.game_btn_new).setOnClickListener(this::newClick);
         LinearLayout gameField = findViewById(R.id.game_layout_field);
         /*
          Приведение к квадратной форме
@@ -100,24 +104,12 @@ public class GameActivity extends AppCompatActivity {
 
             @Override
             public void onSwipeLeft() {
-                if (canMoveLeft()) {
-                    saveField();
-                    moveLeft();
-                    spawnTile();
-                    updateField();
-                } else {
-                    Toast.makeText(GameActivity.this, "NO left move", Toast.LENGTH_SHORT).show();
-                }
+                tryMakeMove(MoveDirection.left);
             }
 
             @Override
             public void onSwipeRight() {
-                if (moveRight()) {
-                    spawnTile();
-                    updateField();
-                } else {
-                    Toast.makeText(GameActivity.this, "NO right move", Toast.LENGTH_SHORT).show();
-                }
+                tryMakeMove(MoveDirection.right);
             }
 
             @Override
@@ -131,8 +123,69 @@ public class GameActivity extends AppCompatActivity {
         startNewGame();
     }
 
-    private void saveField() {
+    private void tryMakeMove(MoveDirection moveDirection) {
+        boolean canMove = false;
+        switch (moveDirection) {
+            case bottom: break;
+            case left: canMove = canMoveLeft(); break;
+            case right: canMove = canMoveRight(); break;
+            case top: break;
+        }
+        if (canMove) {
+            saveField();
+            switch (moveDirection){
+                case bottom: break;
+                case left: moveLeft(); break;
+                case right: moveRight(); break;
+                case top: break;
+            }
+        }
+    }
 
+    private void saveField() {
+        savedState = new SavedState(score, bestScore, new int[N][N]);
+        for (int i = 0; i < N; i++) {
+            System.arraycopy(tiles[i], 0, savedState.tiles[i], 0, N);
+        }
+    }
+
+    private void newClick(View view) {
+        new AlertDialog
+                .Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setTitle(R.string.game_tv_title)
+                .setMessage("Начать новую игру?")
+                .setPositiveButton("Начать", (dlg, btn) -> startNewGame())
+                .setNegativeButton("Продолжить", (dlg, btn) -> {
+                })
+                .setCancelable(false)
+                .show();
+    }
+
+    private void undoClick(View view) {
+        if (savedState != null) {
+            score = savedState.score;
+            bestScore = savedState.bestScore;
+            for (int i = 0; i < N; i++) {
+                System.arraycopy(savedState.tiles[i], 0, tiles[i], 0, N);
+            }
+            savedState = null;
+            updateField();
+        } else {
+            new AlertDialog
+                    .Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setTitle(R.string.game_tv_title)
+                    .setMessage("Множественные сохранения доступны по подписке")
+                    .setNeutralButton("Закрыть", (dlg, btn) -> {
+                    })
+                    .setPositiveButton("Подписка", (dlg, btn) -> Toast.makeText(this, "Скоро будет реализовано", Toast.LENGTH_SHORT).show())
+                    .setNegativeButton("Выход", (dlg, btn) -> finish())
+//                    .setNegativeButtonIcon(AppCompatResources.getDrawable(
+//                            this, android.R.drawable.ic_input_delete) )
+                    .setCancelable(false)
+                    .show();
+        }
     }
 
     private void saveBestScore() {
@@ -182,7 +235,19 @@ public class GameActivity extends AppCompatActivity {
         updateField();
     }
 
-    private boolean moveRight() {
+    private boolean canMoveRight() {
+        for (int i = 0; i < N; i++) {
+            for (int j = 1; j < N; j++) {
+                if (tiles[i][j] != 0 && tiles[i][j - 1] == tiles[i][j] ||
+                        tiles[i][j] == 0 && tiles[i][j - 1] != 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void moveRight() {
         boolean res;
         // [2000]         [0002]        [0002]          [0002]
         // [2020]         [0022]        [0004]          [0004]
@@ -203,7 +268,6 @@ public class GameActivity extends AppCompatActivity {
         if (res) {
             shiftRight(true);
         }
-        return res;
     }
 
     private boolean canMoveLeft() {
@@ -289,7 +353,7 @@ public class GameActivity extends AppCompatActivity {
         return res;
     }
 
-    private boolean spawnTile() {
+    private void spawnTile() {
         // Определяем перечисление всех свободных клеточек, выбираем случайно одну из них
         // значение - с вероятностью 0,1 - 4, 9 - 2
         List<Integer> freeTiles = new ArrayList<>(N * N);
@@ -303,14 +367,13 @@ public class GameActivity extends AppCompatActivity {
             }
         }
         if (freeTiles.isEmpty()) {
-            return false;
+            return;
         }
         int k = freeTiles.get(random.nextInt(freeTiles.size()));
         int i = k / N;
         int j = k % N;
         tiles[i][j] = random.nextInt(10) == 0 ? 4 : 2;
         tvTiles[i][j].setTag(spawnAnimation);
-        return true;
     }
 
     @SuppressLint("DiscouragedApi")
@@ -364,9 +427,22 @@ public class GameActivity extends AppCompatActivity {
         return String.valueOf(value);
     }
 
-    private class SavedState{
-        private final int[][] tiles = null;
-        private long score;
-        private long bestScore;
+    private static class SavedState {
+        private final int[][] tiles;
+        private final long score;
+        private final long bestScore;
+
+        private SavedState(long score, long bestScore, int[][] tiles) {
+            this.tiles = tiles;
+            this.score = score;
+            this.bestScore = bestScore;
+        }
+    }
+
+    private enum MoveDirection {
+        bottom,
+        left,
+        right,
+        top
     }
 }
