@@ -45,6 +45,16 @@
             android:textStyle="bold"/>
 <!--            android:backgroundTint="@null"-->
 
+        <Button
+            android:id="@+id/main_btn_anim"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="40dp"
+            android:text="@string/main_btn_anim"
+            android:backgroundTint="@color/main_btn_bg"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
 
         <Button
             android:id="@+id/main_btn_game"

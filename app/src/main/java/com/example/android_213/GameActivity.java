@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +25,9 @@ public class GameActivity extends AppCompatActivity {
     private final Random random = new Random();
     private TextView tvScore;
     private TextView tvBestScore;
+    private Animation spawnAnimation;
+    private Animation collapseAnimation;
+    //    private final int animTagKey = 1;
     private long score;
     private long bestScore;
     private final int N = 4;
@@ -41,6 +46,9 @@ public class GameActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        spawnAnimation = AnimationUtils.loadAnimation(this, R.anim.game_tile_spawn);
+        collapseAnimation = AnimationUtils.loadAnimation(this, R.anim.game_tile_colapse);
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 tvTiles[i][j] = findViewById( // R.id.game_tv_tile_00
@@ -83,7 +91,12 @@ public class GameActivity extends AppCompatActivity {
 
             @Override
             public void onSwipeLeft() {
-                Toast.makeText(GameActivity.this, "OnSwipeLeft", Toast.LENGTH_SHORT).show();
+                if (moveLeft()) {
+                    spawnTile();
+                    updateField();
+                } else {
+                    Toast.makeText(GameActivity.this, "NO left move", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
@@ -91,8 +104,7 @@ public class GameActivity extends AppCompatActivity {
                 if (moveRight()) {
                     spawnTile();
                     updateField();
-                }
-                else {
+                } else {
                     Toast.makeText(GameActivity.this, "NO right move", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -122,12 +134,12 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private boolean moveRight() {
-        boolean res = false;
+        boolean res;
         // [2000]         [0002]        [0002]          [0002]
         // [2020]         [0022]        [0004]          [0004]
         // [2220]         [0222]        [0204]          [0024]
         // [2222]         [2222]        [0404]          [0044]
-        res = shiftRight();
+        res = shiftRight(false);
         for (int i = 0; i < N; i++) {
             for (int j = N - 1; j > 0; j--) {
                 if (tiles[i][j] == tiles[i][j - 1] && tiles[i][j] != 0) {
@@ -135,16 +147,41 @@ public class GameActivity extends AppCompatActivity {
                     tiles[i][j - 1] = 0;
                     score += tiles[i][j];
                     res = true;
+                    tvTiles[i][j].setTag(collapseAnimation);
                 }
             }
         }
         if (res) {
-            shiftRight();
+            shiftRight(true);
         }
         return res;
     }
 
-    private boolean shiftRight() {
+    private boolean moveLeft() {
+        boolean res;
+        // [2000]         [0002]        [0002]          [0002]
+        // [2020]         [0022]        [0004]          [0004]
+        // [2220]         [0222]        [0204]          [0024]
+        // [2222]         [2222]        [0404]          [0044]
+        res = shiftLeft(false);
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N - 1; j++) {
+                if (tiles[i][j] == tiles[i][j + 1] && tiles[i][j] != 0) {
+                    tiles[i][j] *= 2;
+                    tiles[i][j + 1] = 0;
+                    score += tiles[i][j];
+                    res = true;
+                    tvTiles[i][j].setTag(collapseAnimation);
+                }
+            }
+        }
+        if (res) {
+            shiftLeft(true);
+        }
+        return res;
+    }
+
+    private boolean shiftRight(boolean shiftTags) {
         boolean res = false;
         for (int i = 0; i < N; i++) {
             boolean wasReplace;
@@ -156,6 +193,35 @@ public class GameActivity extends AppCompatActivity {
                         tiles[i][j] = 0;
                         wasReplace = true;
                         res = true;
+                        if (shiftTags) {
+                            Object tag = tvTiles[i][j].getTag();
+                            tvTiles[i][j].setTag(tvTiles[i][j + 1].getTag());
+                            tvTiles[i][j + 1].setTag(tag);
+                        }
+                    }
+                }
+            } while (wasReplace);
+        }
+        return res;
+    }
+
+    private boolean shiftLeft(boolean shiftTags) {
+        boolean res = false;
+        for (int i = 0; i < N; i++) {
+            boolean wasReplace;
+            do {
+                wasReplace = false;
+                for (int j = 1; j < N; j++) {
+                    if (tiles[i][j] != 0 && tiles[i][j - 1] == 0) {
+                        tiles[i][j - 1] = tiles[i][j];
+                        tiles[i][j] = 0;
+                        wasReplace = true;
+                        res = true;
+                        if (shiftTags) {
+                            Object tag = tvTiles[i][j].getTag();
+                            tvTiles[i][j].setTag(tvTiles[i][j - 1].getTag());
+                            tvTiles[i][j - 1].setTag(tag);
+                        }
                     }
                 }
             } while (wasReplace);
@@ -183,6 +249,7 @@ public class GameActivity extends AppCompatActivity {
         int i = k / N;
         int j = k % N;
         tiles[i][j] = random.nextInt(10) == 0 ? 4 : 2;
+        tvTiles[i][j].setTag(spawnAnimation);
         return true;
     }
 
@@ -219,6 +286,12 @@ public class GameActivity extends AppCompatActivity {
                         PorterDuff.Mode.SRC_ATOP
                 );
                 tvTiles[i][j].setTextSize(32.0f); // TODO: рассчитать зависимость от клеточки
+                // проверяем, есть ли анимация для данной клеточки
+                Object animTag = tvTiles[i][j].getTag();
+                if (animTag instanceof Animation) {
+                    tvTiles[i][j].startAnimation((Animation) animTag);
+                    tvTiles[i][j].setTag(null);
+                }
             }
         }
     }

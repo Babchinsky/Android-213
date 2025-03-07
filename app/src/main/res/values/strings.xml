@@ -4,8 +4,9 @@
     <string name="main_tv_title">Знайомство з Android</string>
     <string name="main_btn_calc">Калькулятор</string>
     <string name="main_btn_game">Жесты. Игра.</string>
+    <string name="main_btn_anim">Анимации</string>
 
-<!-- region Calculator   -->
+    <!-- region Calculator   -->
 
     <string name="calc_tv_title">Калькулятор</string>
     <string name="calc_btn_0">0</string>
@@ -45,12 +46,17 @@
     <string name="calc_btn_memory_dropdown">M∨</string>  <!-- Выпадающий список памяти -->
     <!-- endregion -->
 
-<!-- regin Game -->
+    <!-- regin Game -->
     <string name="game_tv_title">2048</string>
     <string name="game_tv_hint">Join the numbers and get to the 2048 tile!</string>
     <string name="game_btn_new">NEW</string>
     <string name="game_btn_undo">UNDO</string>
     <string name="game_tv_score_tpl">SCORE\n%s</string>
     <string name="game_tv_best_tpl">BEST\n%s</string>
-<!--    endregion-->
+    <!--    endregion-->
+
+    <string name="anim_tv_alpha">Alpha</string>
+    <string name="anim_tv_scale">Scale</string>
+    <string name="anim_tv_rotate">Rotate</string>
+    <string name="anim_tv_translate">Translate</string>
 </resources>

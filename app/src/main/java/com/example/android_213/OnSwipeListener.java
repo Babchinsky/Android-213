@@ -36,8 +36,8 @@ public class OnSwipeListener implements View.OnTouchListener {
     }
 
     private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
-        private final static int minSwipeDistance = 100;
-        private final static int minSwipeVelocity = 100;
+        private final static int minSwipeDistance = 50;
+        private final static int minSwipeVelocity = 50;
 
         @Override
         public boolean onDown(@NonNull MotionEvent e) {
