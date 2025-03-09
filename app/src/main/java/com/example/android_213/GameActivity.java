@@ -101,7 +101,7 @@ public class GameActivity extends AppCompatActivity {
         gameField.setOnTouchListener(new OnSwipeListener(GameActivity.this) {
             @Override
             public void onSwipeBottom() {
-                Toast.makeText(GameActivity.this, "OnSwipeBottom", Toast.LENGTH_SHORT).show();
+                tryMakeMove(MoveDirection.bottom);
             }
 
             @Override
@@ -116,7 +116,7 @@ public class GameActivity extends AppCompatActivity {
 
             @Override
             public void onSwipeTop() {
-                Toast.makeText(GameActivity.this, "OnSwipeTop", Toast.LENGTH_SHORT).show();
+                tryMakeMove(MoveDirection.top);
             }
         });
 
@@ -128,18 +128,42 @@ public class GameActivity extends AppCompatActivity {
     private void tryMakeMove(MoveDirection moveDirection) {
         boolean canMove = false;
         switch (moveDirection) {
-            case bottom: break;
-            case left: canMove = canMoveLeft(); break;
-            case right: canMove = canMoveRight(); break;
-            case top: break;
+            case bottom:
+                canMove = canMoveDown();
+                break;
+            case left:
+                canMove = canMoveLeft();
+                break;
+            case right:
+                canMove = canMoveRight();
+                break;
+            case top:
+                canMove = canMoveTop();
+                break;
         }
         if (canMove) {
             saveField();
-            switch (moveDirection){
-                case bottom: break;
-                case left: moveLeft(); break;
-                case right: moveRight(); break;
-                case top: break;
+            switch (moveDirection) {
+                case bottom:
+                    moveDown();
+                    spawnTile();
+                    updateField();
+                    break;
+                case left:
+                    moveLeft();
+                    spawnTile();
+                    updateField();
+                    break;
+                case right:
+                    moveRight();
+                    spawnTile();
+                    updateField();
+                    break;
+                case top:
+                    moveTop();
+                    spawnTile();
+                    updateField();
+                    break;
             }
         }
     }
@@ -210,7 +234,6 @@ public class GameActivity extends AppCompatActivity {
         } catch (IOException ex) {
             Log.w("GameActivity::saveBestScore", ex.getMessage() + " ");
         }
-
     }
 
     private void loadBestScore() {
@@ -240,8 +263,8 @@ public class GameActivity extends AppCompatActivity {
     private boolean canMoveRight() {
         for (int i = 0; i < N; i++) {
             for (int j = 1; j < N; j++) {
-                if (tiles[i][j] != 0 && tiles[i][j - 1] == tiles[i][j] ||
-                        tiles[i][j] == 0 && tiles[i][j - 1] != 0) {
+                if ((tiles[i][j] != 0 && tiles[i][j - 1] == tiles[i][j]) ||
+                        (tiles[i][j] == 0 && tiles[i][j - 1] != 0)) {
                     return true;
                 }
             }
@@ -275,8 +298,8 @@ public class GameActivity extends AppCompatActivity {
     private boolean canMoveLeft() {
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N - 1; j++) {
-                if (tiles[i][j] != 0 && tiles[i][j + 1] == tiles[i][j] ||
-                        tiles[i][j] == 0 && tiles[i][j + 1] != 0) {
+                if ((tiles[i][j] != 0 && tiles[i][j + 1] == tiles[i][j]) ||
+                        (tiles[i][j] == 0 && tiles[i][j + 1] != 0)) {
                     return true;
                 }
             }
@@ -307,6 +330,69 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
+    // Новые методы для движения вверх
+    private boolean canMoveTop() {
+        for (int j = 0; j < N; j++) {
+            for (int i = 0; i < N - 1; i++) {
+                if ((tiles[i][j] != 0 && tiles[i + 1][j] == tiles[i][j]) ||
+                        (tiles[i][j] == 0 && tiles[i + 1][j] != 0)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void moveTop() {
+        boolean res = shiftUp(false);
+        for (int j = 0; j < N; j++) {
+            for (int i = 0; i < N - 1; i++) {
+                if (tiles[i][j] == tiles[i + 1][j] && tiles[i][j] != 0) {
+                    tiles[i][j] *= 2;
+                    tiles[i + 1][j] = 0;
+                    score += tiles[i][j];
+                    res = true;
+                    tvTiles[i][j].setTag(collapseAnimation);
+                }
+            }
+        }
+        if (res) {
+            shiftUp(true);
+        }
+    }
+
+    // Новые методы для движения вниз
+    private boolean canMoveDown() {
+        for (int j = 0; j < N; j++) {
+            for (int i = N - 1; i > 0; i--) {
+                if ((tiles[i][j] != 0 && tiles[i - 1][j] == tiles[i][j]) ||
+                        (tiles[i][j] == 0 && tiles[i - 1][j] != 0)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void moveDown() {
+        boolean res = shiftDown(false);
+        for (int j = 0; j < N; j++) {
+            for (int i = N - 1; i > 0; i--) {
+                if (tiles[i][j] == tiles[i - 1][j] && tiles[i][j] != 0) {
+                    tiles[i][j] *= 2;
+                    tiles[i - 1][j] = 0;
+                    score += tiles[i][j];
+                    res = true;
+                    tvTiles[i][j].setTag(collapseAnimation);
+                }
+            }
+        }
+        if (res) {
+            shiftDown(true);
+        }
+    }
+
+    // Методы сдвига для горизонтальных движений (уже были)
     private boolean shiftRight(boolean shiftTags) {
         boolean res = false;
         for (int i = 0; i < N; i++) {
@@ -376,6 +462,55 @@ public class GameActivity extends AppCompatActivity {
         int j = k % N;
         tiles[i][j] = random.nextInt(10) == 0 ? 4 : 2;
         tvTiles[i][j].setTag(spawnAnimation);
+    }
+
+    // Новые методы сдвига для вертикальных движений
+    private boolean shiftUp(boolean shiftTags) {
+        boolean res = false;
+        for (int j = 0; j < N; j++) {
+            boolean wasReplace;
+            do {
+                wasReplace = false;
+                for (int i = 1; i < N; i++) {
+                    if (tiles[i][j] != 0 && tiles[i - 1][j] == 0) {
+                        tiles[i - 1][j] = tiles[i][j];
+                        tiles[i][j] = 0;
+                        wasReplace = true;
+                        res = true;
+                        if (shiftTags) {
+                            Object tag = tvTiles[i][j].getTag();
+                            tvTiles[i][j].setTag(tvTiles[i - 1][j].getTag());
+                            tvTiles[i - 1][j].setTag(tag);
+                        }
+                    }
+                }
+            } while (wasReplace);
+        }
+        return res;
+    }
+
+    private boolean shiftDown(boolean shiftTags) {
+        boolean res = false;
+        for (int j = 0; j < N; j++) {
+            boolean wasReplace;
+            do {
+                wasReplace = false;
+                for (int i = 0; i < N - 1; i++) {
+                    if (tiles[i][j] != 0 && tiles[i + 1][j] == 0) {
+                        tiles[i + 1][j] = tiles[i][j];
+                        tiles[i][j] = 0;
+                        wasReplace = true;
+                        res = true;
+                        if (shiftTags) {
+                            Object tag = tvTiles[i][j].getTag();
+                            tvTiles[i][j].setTag(tvTiles[i + 1][j].getTag());
+                            tvTiles[i + 1][j].setTag(tag);
+                        }
+                    }
+                }
+            } while (wasReplace);
+        }
+        return res;
     }
 
     @SuppressLint("DiscouragedApi")
