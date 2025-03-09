@@ -44,10 +44,12 @@ public class GameActivity extends AppCompatActivity {
     private final int[][] tiles = new int[N][N];
     private final TextView[][] tvTiles = new TextView[N][N];
     private SavedState savedState;
+    Animation bestScoreAnimation;
 
     @SuppressLint({"ClickableViewAccessibility", "DiscouragedApi"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        bestScoreAnimation = AnimationUtils.loadAnimation(this, R.anim.best_score_anim);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_game);
@@ -381,6 +383,7 @@ public class GameActivity extends AppCompatActivity {
         if (score > bestScore) {
             bestScore = score;
             saveBestScore();
+            tvBestScore.startAnimation(bestScoreAnimation);
         }
         tvScore.setText(getString(R.string.game_tv_score_tpl, scoreToString(score)));
         tvBestScore.setText(getString(R.string.game_tv_best_tpl, scoreToString(bestScore)));
@@ -421,6 +424,13 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
         }
+    }
+
+    private float getTextSizeForTile(int value) {
+        int length = String.valueOf(value).length();
+        if (length <= 2) return 32.0f;
+        else if (length == 3) return 28.0f;
+        else return 24.0f;
     }
 
     private String scoreToString(long value) {
