@@ -61,7 +61,7 @@ public class OnSwipeListener implements View.OnTouchListener {
                     }
                 }
                 else if(absY > 2 * absX){
-                    if(absY>= minSwipeDistance && velocityY >= minSwipeVelocity){
+                    if (absY >= minSwipeDistance && Math.abs(velocityY) >= minSwipeVelocity) {
                         if (deltaY > 0) onSwipeBottom();
                         else onSwipeTop();
                         isServed = true;
