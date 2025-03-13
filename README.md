@@ -13,3 +13,5 @@
 # 07.03.2025
 ![Homework 1](GIFs/07.03.2025.gif)
 
+# 13.03.2025
+![image](https://github.com/user-attachments/assets/1636ec36-7e9a-4dd2-88da-16d5cb30c6ce)
