@@ -60,6 +60,7 @@
             android:id="@+id/main_btn_game"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="40dp"
             android:text="@string/main_btn_game"
             android:backgroundTint="@color/main_btn_bg"
             android:textColor="@color/white"
@@ -68,7 +69,17 @@
             />
 <!--            android:backgroundTint="@null" -->
 
-
+        <Button
+            android:id="@+id/main_btn_rate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="40dp"
+            android:text="@string/main_btn_rate"
+            android:backgroundTint="@color/main_btn_bg"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            />
 
     </LinearLayout>
 

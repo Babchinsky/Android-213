@@ -5,6 +5,7 @@
     <string name="main_btn_calc">Калькулятор</string>
     <string name="main_btn_game">Жесты. Игра.</string>
     <string name="main_btn_anim">Анимации</string>
+    <string name="main_btn_rate">Курсы валют</string>
 
     <!-- region Calculator   -->
 
@@ -59,4 +60,7 @@
     <string name="anim_tv_scale">Scale</string>
     <string name="anim_tv_rotate">Rotate</string>
     <string name="anim_tv_translate">Translate</string>
+
+    <string name="rate_load_fail">Произошла ошибка загрузки</string>
+
 </resources>
