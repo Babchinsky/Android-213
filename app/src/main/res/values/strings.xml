@@ -62,5 +62,10 @@
     <string name="anim_tv_translate">Translate</string>
 
     <string name="rate_load_fail">Произошла ошибка загрузки</string>
+    <string name="rate_sv_description">Все курсы валют</string>
+
+    <string name="rate_info">
+    Полное название: %1$s\nСокращённое название: %2$s\nКод r030: %3$d\nКурс на %4$s: 1 %2$s = %5$.4f HRN
+    </string>
 
 </resources>
