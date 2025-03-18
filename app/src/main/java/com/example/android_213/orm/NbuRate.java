@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.Locale;
 
 public class NbuRate {
-    private static final SimpleDateFormat dateFormat =
+    public static final SimpleDateFormat dateFormat =
             new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT);
     private int r030;
     private String text;
