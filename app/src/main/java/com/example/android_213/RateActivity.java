@@ -1,11 +1,15 @@
 package com.example.android_213;
 
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -23,14 +27,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -40,13 +43,12 @@ import java.util.concurrent.Executors;
 
 public class RateActivity extends AppCompatActivity {
     private static final String nbuUrl = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
-    private static final String cacheFilename = "nbu_rates_cache.json";
-    private static List<NbuRate> cacheNbuRates = null;
     private List<NbuRate> nbuRates;
     private LinearLayout ratesContainer;
     private Drawable rateBg;
     private ExecutorService pool;
     private final Handler handler = new Handler();
+    private static Map<String, List<NbuRate>> ratesCache = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,36 +63,64 @@ public class RateActivity extends AppCompatActivity {
         rateBg = AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rate_shape);
         ratesContainer = findViewById(R.id.rate_container);
         findViewById(R.id.rate_btn_close).setOnClickListener(v -> finish());
-        pool = Executors.newFixedThreadPool(3);
-        boolean isNeedReload = true;
-        if (cacheNbuRates == null) {
-            try (FileInputStream fis = openFileInput(cacheFilename)) {
-                Log.d("onCreate", "try restoring cache from file");
-                String content = readAllText(fis);
-                mapRates(content);
 
-                Log.d("onCreate", "cache from file restored");
-                isNeedReload = isRatesExpired();
-            } catch (IOException | JSONException ignored) {
-                Log.d("onCreate", "file cache failed");
+        EditText dateInput = findViewById(R.id.date_input);
+        String currentDate = NbuRate.dateFormat.format(new Date());
+        dateInput.setText(currentDate);
+
+        dateInput.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            int year = calendar.get(Calendar.YEAR);
+            int month = calendar.get(Calendar.MONTH);
+            int day = calendar.get(Calendar.DAY_OF_MONTH);
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    (view, year1, month1, dayOfMonth) -> {
+                        String selectedDate = String.format("%02d.%02d.%d", dayOfMonth, month1 + 1, year1);
+                        dateInput.setText(selectedDate);
+                        loadRatesForDate(selectedDate);
+                    }, year, month, day);
+            datePickerDialog.show();
+        });
+
+        dateInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String input = s.toString();
+                if (input.matches("\\d{2}\\.\\d{2}\\.\\d{4}")) {
+                    loadRatesForDate(input);
+                }
             }
-        } else {
-            Log.d("onCreate", "cache from memory restored");
-            nbuRates = cacheNbuRates;
-            isNeedReload = isRatesExpired();
-        }
+        });
 
-        if (isNeedReload) {
-            pool.submit(this::loadRates);
-        } else {
-            showRates();
-        }
+        EditText searchInput = findViewById(R.id.search_input);
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterRates(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        pool = Executors.newFixedThreadPool(3);
+        nbuRates = new ArrayList<>();
+        loadRatesForDate(currentDate); // Загружаем курсы за текущую дату
         handler.postDelayed(this::periodicAction, 5000);
     }
 
     private void periodicAction() {
         if (isRatesExpired()) {
-            pool.submit(this::loadRates);
+            loadRates();
             Log.d("periodicAction", "reload started");
         } else {
             Log.d("periodicAction", "rates are actual");
@@ -99,57 +129,28 @@ public class RateActivity extends AppCompatActivity {
     }
 
     private boolean isRatesExpired() {
+        if (nbuRates == null || nbuRates.isEmpty()) {
+            return true;
+        }
         try {
-            return nbuRates.get(0).getExchangeDate().before(
-                    NbuRate.dateFormat.parse(
-                            NbuRate.dateFormat.format(new Date())
-                    )
-            );
-        } catch (ParseException ex) {
-            Log.d("isRatesExpired", ex.getCause() + ex.getMessage());
+            Date currentDate = new Date();
+            Date exchangeDate = nbuRates.get(0).getExchangeDate();
+            return exchangeDate.before(currentDate);
+        } catch (Exception ex) {
+            Log.d("isRatesExpired", ex.getMessage());
+            return true;
         }
-        return false;
-    }
-
-    private void mapRates(String jsonText) throws JSONException {
-        JSONArray arr = new JSONArray(jsonText);
-        int len = arr.length();
-        nbuRates = new ArrayList<>();
-
-        for (int i = 0; i < len; i++) {
-            nbuRates.add(NbuRate.fromJsonObject(
-                    arr.getJSONObject(i)));
-        }
-        cacheNbuRates = nbuRates;
     }
 
     private void loadRates() {
-        try {
-            Log.d("loadRates", "Loading started");
-            Thread.sleep(1);
-            String text = fetchUrlText(nbuUrl);
-            pool.submit(() -> {
-                Log.d("loadRates", "try saving file cache");
-                try (FileOutputStream fos = openFileOutput(cacheFilename, Context.MODE_PRIVATE)) {
-                    fos.write(text.getBytes(StandardCharsets.UTF_8));
-                    Log.d("loadRates", "file cache saved");
-                } catch (IOException ex) {
-                    Log.d("loadRates", ex.getCause() + ex.getMessage());
-                }
-            });
-            mapRates(text);
-            runOnUiThread(this::showRates);
-        } catch (RuntimeException | JSONException ignored) {
-            // runOnUiThread( () -> tvTmp.setText( R.string.rate_load_failed )  ) ;
-        } catch (InterruptedException e) {
-            Log.d("loadRates", "InterruptedException");
-        }
+        String currentDate = NbuRate.dateFormat.format(new Date());
+        loadRatesForDate(currentDate);
     }
 
     private void showRates() {
-        for (NbuRate rate : nbuRates) {
-            ratesContainer.addView(rateView(rate));
-        }
+        EditText searchInput = findViewById(R.id.search_input);
+        String query = searchInput != null ? searchInput.getText().toString() : "";
+        filterRates(query);
     }
 
     private View rateView(NbuRate rate) {
@@ -170,7 +171,7 @@ public class RateActivity extends AppCompatActivity {
         layout.addView(tv);
 
         tv = new TextView(this);
-        tv.setText(rate.getRate() + "");
+        tv.setText(String.valueOf(rate.getRate()));
         tv.setLayoutParams(layoutParams);
         layout.addView(tv);
 
@@ -181,16 +182,14 @@ public class RateActivity extends AppCompatActivity {
 
     private void onRateClick(View view) {
         NbuRate rate = (NbuRate) view.getTag();
-
-        // Получаем строку из ресурсов с подставленными значениями
+        String exchangeDateStr = NbuRate.dateFormat.format(rate.getExchangeDate());
         String message = getString(R.string.rate_info,
                 rate.getText(),  // Полное название
                 rate.getCc(),   // Код валюты (например, AUD)
                 rate.getR030(), // Код r030
-                "13.03.2025",   // Фиксированная дата (можно сделать динамической)
+                exchangeDateStr, // Дата обмена
                 rate.getRate()  // Курс
         );
-
         new AlertDialog.Builder(this)
                 .setTitle("Інформація про курс")
                 .setMessage(message)
@@ -201,7 +200,7 @@ public class RateActivity extends AppCompatActivity {
     private String fetchUrlText(String href) throws RuntimeException {
         if (cache.containsKey(href)) {
             CacheItem cacheItem = cache.get(href);
-            if (cacheItem != null) {   // + check expires
+            if (cacheItem != null) {
                 return cacheItem.text;
             }
         }
@@ -209,9 +208,8 @@ public class RateActivity extends AppCompatActivity {
             String text = readAllText(urlStream);
             cache.put(href, new CacheItem(href, text, null));
             return text;
-        } catch (android.os.NetworkOnMainThreadException |
-                 java.lang.SecurityException | IOException ex) {
-            Log.d("loadRates", "MalformedURLException: " + ex.getCause() + ex.getMessage());
+        } catch (IOException ex) {
+            Log.d("loadRates", "Ошибка загрузки: " + ex.getMessage());
             throw new RuntimeException(ex);
         }
     }
@@ -224,6 +222,81 @@ public class RateActivity extends AppCompatActivity {
             byteBuilder.write(buffer, 0, receivedBytes);
         }
         return byteBuilder.toString();
+    }
+
+    private String formatDateForApi(String date) {
+        String[] parts = date.split("\\.");
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Invalid date format: " + date);
+        }
+        return parts[2] + parts[1] + parts[0]; // yyyy + MM + dd
+    }
+
+    private void loadRatesForDate(String date) {
+        String formattedDate = formatDateForApi(date);
+        List<NbuRate> cachedRates = getRatesFromCache(formattedDate);
+        if (cachedRates != null) {
+            nbuRates = cachedRates;
+            runOnUiThread(this::showRates);
+            Log.d("loadRatesForDate", "Курсы загружены из кеша для даты: " + date);
+        } else {
+            String url = nbuUrl + "&date=" + formattedDate;
+            pool.submit(() -> {
+                try {
+                    String text = fetchUrlText(url);
+                    if (text.startsWith("[")) {
+                        saveCacheForDate(formattedDate, text);
+                        runOnUiThread(this::showRates);
+                    } else {
+                        throw new JSONException("Неверный ответ от API: " + text);
+                    }
+                } catch (Exception e) {
+                    Log.e("loadRatesForDate", "Ошибка загрузки курсов за дату: " + date, e);
+                    runOnUiThread(() -> {
+                        new AlertDialog.Builder(this)
+                                .setTitle("Ошибка")
+                                .setMessage("Не удалось загрузить курсы за " + date + ": " +
+                                        (e.getMessage().contains("Wrong date format") ?
+                                                "Данные за будущие даты недоступны" : e.getMessage()))
+                                .setPositiveButton("OK", null)
+                                .show();
+                    });
+                }
+            });
+        }
+    }
+
+    private void saveCacheForDate(String date, String jsonText) {
+        try {
+            JSONArray arr = new JSONArray(jsonText);
+            List<NbuRate> rates = new ArrayList<>();
+            for (int i = 0; i < arr.length(); i++) {
+                rates.add(NbuRate.fromJsonObject(arr.getJSONObject(i)));
+            }
+            ratesCache.put(date, rates);
+            nbuRates = rates;
+        } catch (JSONException e) {
+            Log.e("saveCacheForDate", "Ошибка парсинга JSON для даты: " + date, e);
+        }
+    }
+
+    private List<NbuRate> getRatesFromCache(String date) {
+        return ratesCache.get(date);
+    }
+
+    private void filterRates(String query) {
+        if (nbuRates == null) return;
+        List<NbuRate> filteredRates = new ArrayList<>();
+        for (NbuRate rate : nbuRates) {
+            if (rate.getText().toLowerCase().contains(query.toLowerCase()) ||
+                    rate.getCc().toLowerCase().contains(query.toLowerCase())) {
+                filteredRates.add(rate);
+            }
+        }
+        ratesContainer.removeAllViews();
+        for (NbuRate rate : filteredRates) {
+            ratesContainer.addView(rateView(rate));
+        }
     }
 
     @Override

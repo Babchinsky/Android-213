@@ -68,7 +68,8 @@
     <string name="rate_info">
     Полное название: %1$s\nСокращённое название: %2$s\nКод r030: %3$d\nКурс на %4$s: 1 %2$s = %5$.4f HRN
     </string>
-
+    <string name="rate_field_choose_date">Выберите дату</string>
+    <string name="rate_field_search">Поиск по названию или коду</string>
 
 
 </resources>
