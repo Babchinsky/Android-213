@@ -72,4 +72,13 @@
     <string name="rate_field_search">Поиск по названию или коду</string>
 
 
+    <string name="main_btn_chat">Чат</string>
+    <string name="chat_tv_author">Автор</string>
+    <string name="chat_tv_message">Текст:</string>
+    <string name="chat_tv_message_hint">Сообщение в чат</string>
+    <string name="chat_iv_bell_description">Новое уведомление</string>
+    <string name="chat_msg_empty_author">Введите своё имя</string>
+    <string name="chat_msg_empty_message">Введите сообщение</string>
+
+
 </resources>
