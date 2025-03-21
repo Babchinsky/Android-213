@@ -2,8 +2,8 @@ package com.example.android_213;
 
 import static com.example.android_213.Services.fetchUrlText;
 
+import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,24 +22,22 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android_213.orm.NbuRate;
+import com.example.android_213.rates.RatesAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -50,7 +48,10 @@ public class RateActivity extends AppCompatActivity {
     private Drawable rateBg;
     private ExecutorService pool;
     private final Handler handler = new Handler();
-    private static Map<String, List<NbuRate>> ratesCache = new HashMap<>();
+    private static final Map<String, List<NbuRate>> ratesCache = new HashMap<>();
+
+    private RecyclerView ratesRecyclerView;
+    private RatesAdapter ratesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +64,7 @@ public class RateActivity extends AppCompatActivity {
             return insets;
         });
         rateBg = AppCompatResources.getDrawable(getApplicationContext(), R.drawable.rate_shape);
-        ratesContainer = findViewById(R.id.rate_container);
+//        ratesContainer = findViewById(R.id.rate_container);
         findViewById(R.id.rate_btn_close).setOnClickListener(v -> finish());
 
         EditText dateInput = findViewById(R.id.date_input);
@@ -77,7 +78,7 @@ public class RateActivity extends AppCompatActivity {
             int day = calendar.get(Calendar.DAY_OF_MONTH);
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                     (view, year1, month1, dayOfMonth) -> {
-                        String selectedDate = String.format("%02d.%02d.%d", dayOfMonth, month1 + 1, year1);
+                        @SuppressLint("DefaultLocale") String selectedDate = String.format("%02d.%02d.%d", dayOfMonth, month1 + 1, year1);
                         dateInput.setText(selectedDate);
                         loadRatesForDate(selectedDate);
                     }, year, month, day);
@@ -118,7 +119,34 @@ public class RateActivity extends AppCompatActivity {
         nbuRates = new ArrayList<>();
         loadRatesForDate(currentDate); // Загружаем курсы за текущую дату
         handler.postDelayed(this::periodicAction, 5000);
+
+
+
+
+
+        ratesRecyclerView = findViewById(R.id.ratesRecyclerView);
+        ratesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        ratesAdapter = new RatesAdapter(new ArrayList<>(), this::onRateClicked);
+        ratesRecyclerView.setAdapter(ratesAdapter);
     }
+
+    public void onRateClicked(NbuRate rate) {
+        String exchangeDateStr = NbuRate.dateFormat.format(rate.getExchangeDate());
+        String message = getString(R.string.rate_info,
+                rate.getText(),
+                rate.getCc(),
+                rate.getR030(),
+                exchangeDateStr,
+                rate.getRate()
+        );
+        new AlertDialog.Builder(this)
+                .setTitle("Інформація про курс")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
 
     private void periodicAction() {
         if (isRatesExpired()) {
@@ -139,7 +167,7 @@ public class RateActivity extends AppCompatActivity {
             Date exchangeDate = nbuRates.get(0).getExchangeDate();
             return exchangeDate.before(currentDate);
         } catch (Exception ex) {
-            Log.d("isRatesExpired", ex.getMessage());
+            Log.d("isRatesExpired", Objects.requireNonNull(ex.getMessage()));
             return true;
         }
     }
@@ -154,6 +182,19 @@ public class RateActivity extends AppCompatActivity {
         String query = searchInput != null ? searchInput.getText().toString() : "";
         filterRates(query);
     }
+
+    private void filterRates(String query) {
+        if (nbuRates == null) return;
+        List<NbuRate> filteredRates = new ArrayList<>();
+        for (NbuRate rate : nbuRates) {
+            if (rate.getText().toLowerCase().contains(query.toLowerCase()) ||
+                    rate.getCc().toLowerCase().contains(query.toLowerCase())) {
+                filteredRates.add(rate);
+            }
+        }
+        ratesAdapter.updateRates(filteredRates);
+    }
+
 
     private View rateView(NbuRate rate) {
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
@@ -228,15 +269,13 @@ public class RateActivity extends AppCompatActivity {
                     }
                 } catch (Exception e) {
                     Log.e("loadRatesForDate", "Ошибка загрузки курсов за дату: " + date, e);
-                    runOnUiThread(() -> {
-                        new AlertDialog.Builder(this)
-                                .setTitle("Ошибка")
-                                .setMessage("Не удалось загрузить курсы за " + date + ": " +
-                                        (e.getMessage().contains("Wrong date format") ?
-                                                "Данные за будущие даты недоступны" : e.getMessage()))
-                                .setPositiveButton("OK", null)
-                                .show();
-                    });
+                    runOnUiThread(() -> new AlertDialog.Builder(this)
+                            .setTitle("Ошибка")
+                            .setMessage("Не удалось загрузить курсы за " + date + ": " +
+                                    (Objects.requireNonNull(e.getMessage()).contains("Wrong date format") ?
+                                            "Данные за будущие даты недоступны" : e.getMessage()))
+                            .setPositiveButton("OK", null)
+                            .show());
                 }
             });
         }
@@ -258,21 +297,6 @@ public class RateActivity extends AppCompatActivity {
 
     private List<NbuRate> getRatesFromCache(String date) {
         return ratesCache.get(date);
-    }
-
-    private void filterRates(String query) {
-        if (nbuRates == null) return;
-        List<NbuRate> filteredRates = new ArrayList<>();
-        for (NbuRate rate : nbuRates) {
-            if (rate.getText().toLowerCase().contains(query.toLowerCase()) ||
-                    rate.getCc().toLowerCase().contains(query.toLowerCase())) {
-                filteredRates.add(rate);
-            }
-        }
-        ratesContainer.removeAllViews();
-        for (NbuRate rate : filteredRates) {
-            ratesContainer.addView(rateView(rate));
-        }
     }
 
     @Override

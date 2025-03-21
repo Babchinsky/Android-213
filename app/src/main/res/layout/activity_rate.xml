@@ -1,69 +1,67 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#F5F5F5"
     tools:context=".RateActivity">
 
-    <!-- Кнопка закрытия вверху справа -->
     <ImageButton
         android:id="@+id/rate_btn_close"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/rate_btn_close_description"
         android:src="@android:drawable/ic_lock_power_off"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp" />
+        android:layout_margin="16dp" />
 
-    <!-- Поле ввода даты под кнопкой закрытия -->
     <EditText
         android:id="@+id/date_input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:autofillHints=""
+        android:textSize="16sp"
+        android:backgroundTint="#9E9E9E"
+        android:textColor="#212121"
+        android:textColorHint="#757575"
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="4dp"
         android:hint="@string/rate_field_choose_date"
         app:layout_constraintTop_toBottomOf="@id/rate_btn_close"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp" />
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp" />
 
-    <!-- Поле поиска под полем даты -->
     <EditText
         android:id="@+id/search_input"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:backgroundTint="#9E9E9E"
+        android:textColor="#212121"
+        android:textColorHint="#757575"
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="4dp"
         android:hint="@string/rate_field_search"
         app:layout_constraintTop_toBottomOf="@id/date_input"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp" />
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp" />
 
-    <!-- ScrollView с курсами под полем поиска -->
-    <ScrollView
-        android:id="@+id/scrollView2"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/ratesRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:contentDescription="@string/rate_sv_description"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"
         app:layout_constraintTop_toBottomOf="@id/search_input"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp">
-
-        <LinearLayout
-            android:id="@+id/rate_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp" />
-    </ScrollView>
+        android:layout_marginTop="12dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
