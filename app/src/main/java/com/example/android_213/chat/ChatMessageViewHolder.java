@@ -10,7 +10,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class ChatMessageViewHolder extends RecyclerView.ViewHolder {
     public static final SimpleDateFormat dateFormat =
@@ -36,12 +38,35 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder {
     public void showMessage(){
         tvAuthor.setText(chatMessage.getAuthor());
         tvText.setText(chatMessage.getText());
-        /*
-        TODO: не выводить дату(только время), если дата - сегодня
-         заменять дату на "вчера" или день назад, а такжюже "2 дня назад" и так далее
-        */
-        tvMoment.setText(dateFormat.format(this.chatMessage.getMoment()));
+
+        Calendar messageCalendar = Calendar.getInstance();
+        messageCalendar.setTime(chatMessage.getMoment());
+
+        Calendar currentCalendar = Calendar.getInstance();
+
+        long diffMillis = currentCalendar.getTimeInMillis() - messageCalendar.getTimeInMillis();
+        long diffDays = TimeUnit.MILLISECONDS.toDays(diffMillis);
+
+        String displayMoment;
+
+        if (isSameDay(currentCalendar, messageCalendar)) {
+            displayMoment = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(chatMessage.getMoment());
+        } else if (diffDays == 1) {
+            displayMoment = "вчера, " + new SimpleDateFormat("HH:mm", Locale.getDefault()).format(chatMessage.getMoment());
+        } else if (diffDays <= 7) {
+            displayMoment = diffDays + " дня назад, " + new SimpleDateFormat("HH:mm", Locale.getDefault()).format(chatMessage.getMoment());
+        } else {
+            displayMoment = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(chatMessage.getMoment());
+        }
+
+        tvMoment.setText(displayMoment);
     }
+
+    private boolean isSameDay(Calendar cal1, Calendar cal2) {
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)
+                && cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
+    }
+
 }
 /*
 Класс-посредник между XML-разметкой представления View и объектом Java
