@@ -17,6 +17,14 @@ public class ChatMessage {
     private String text;
     private Date moment;
 
+    public ChatMessage() {
+    }
+
+    public ChatMessage(String author, String text) {
+        this.author = author;
+        this.text = text;
+    }
+
     public String getId() {
         return id;
     }
