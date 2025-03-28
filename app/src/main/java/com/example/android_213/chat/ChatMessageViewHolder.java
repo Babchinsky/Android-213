@@ -1,9 +1,12 @@
 package com.example.android_213.chat;
 
+import com.example.android_213.ChatActivity;
 import com.example.android_213.R;
 import com.example.android_213.orm.ChatMessage;
 
+import android.view.Gravity;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -12,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class ChatMessageViewHolder extends RecyclerView.ViewHolder {
@@ -21,13 +25,16 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder {
     private TextView tvAuthor;
     private TextView tvText;
     private TextView tvMoment;
+    private final LinearLayout layout;
     private ChatMessage chatMessage;
 
-    public ChatMessageViewHolder(@NonNull View itemView){
+    public ChatMessageViewHolder(@NonNull View itemView) {
         super(itemView);
         tvAuthor = itemView.findViewById(R.id.chat_msg_author);
         tvText = itemView.findViewById(R.id.chat_msg_text);
         tvMoment = itemView.findViewById(R.id.chat_msg_moment);
+        layout = itemView.findViewById(R.id.chat_msg_layout);
+
     }
 
     public void setChatMessage(ChatMessage chatMessage) {
@@ -35,7 +42,7 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder {
         showMessage();
     }
 
-    public void showMessage(){
+    public void showMessage() {
         tvAuthor.setText(chatMessage.getAuthor());
         tvText.setText(chatMessage.getText());
 
@@ -60,6 +67,12 @@ public class ChatMessageViewHolder extends RecyclerView.ViewHolder {
         }
 
         tvMoment.setText(displayMoment);
+
+        layout.setGravity(
+                Objects.equals(this.chatMessage.getAuthor(), (ChatActivity.author))
+                        ? Gravity.END
+                        : Gravity.START
+        );
     }
 
     private boolean isSameDay(Calendar cal1, Calendar cal2) {
