@@ -24,3 +24,8 @@
 
 # 27.03.2025
 ![image](https://github.com/user-attachments/assets/b2c2e576-9bf5-47b1-b8c1-4d75e0b05ab3)
+
+
+# 28.03.2025
+![image](https://github.com/user-attachments/assets/289025fb-ff9c-4bde-9b46-6e2976075fa6)
+
